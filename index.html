@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rainbow Trucks</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;800&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;--ink:#3b2a66;--card:#fffdf7;--bg:#bfe9ff}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#3b2a66;--card:#fffdf7;--bg:#bfe9ff}}
+:root[data-theme="dark"]{--ink:#3b2a66;--card:#fffdf7;--bg:#bfe9ff}
+html,body{height:100%;margin:0;background:var(--bg);font-family:"Baloo 2","Comic Sans MS","Trebuchet MS",sans-serif;color:var(--ink);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#box{position:absolute;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px)}
+canvas{display:block}
+.ov{position:fixed;inset:0;display:flex;padding:env(safe-area-inset-top,0px) 12px env(safe-area-inset-bottom,0px);overflow:auto;text-align:center;background:linear-gradient(#ffd6f5cc,#c9f0ffcc)}
+.in{margin:auto;padding:14px 0}
+.hide{display:none!important}
+h1{font-size:clamp(30px,7vw,52px);margin:0 0 4px;background:linear-gradient(90deg,#ff3b3b,#ff9f1c,#e8c800,#27c24a,#35b6ff,#6b5bff,#c850ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.cards{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:12px}
+.tc{background:var(--card);border-radius:24px;padding:10px 10px 14px;width:min(230px,44vw);border:6px solid;cursor:pointer;transition:transform .15s}
+.tc:active,.tc:hover{transform:scale(1.06)}
+.tc canvas{width:100%;height:auto}
+.tc b{font-size:26px;display:block}
+.btn{font:inherit;font-weight:800;font-size:20px;border:0;border-radius:40px;padding:10px 24px;margin:6px;color:#fff;background:linear-gradient(90deg,#ff5fa2,#ff9f1c);cursor:pointer;box-shadow:0 4px 0 #0002}
+.btn.b2{background:linear-gradient(90deg,#35b6ff,#6b5bff)}
+#pk{display:grid;grid-template-columns:repeat(3,72px);gap:10px;justify-content:center;margin:12px 0}
+#pk button{height:64px;font:inherit;font-size:28px;font-weight:800;border-radius:18px;border:4px solid #6b5bff;background:#fff;color:#3b2a66;cursor:pointer}
+#pk button:active{background:#ff9fd0}
+#pd{font-size:44px;font-weight:800;letter-spacing:6px;min-height:56px}
+.shake{animation:sh .4s}@keyframes sh{25%{transform:translateX(-12px)}75%{transform:translateX(12px)}}
+#gt{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(40px,11vw,90px);font-weight:800;color:#fff;text-shadow:0 4px 0 #6b5bff,0 0 20px #0006;pointer-events:none;line-height:1.05}
+.cw{background:linear-gradient(135deg,#ff3b3b,#ff9f1c,#ffe93b,#3ddc5a,#35b6ff,#c850ff);padding:8px;border-radius:26px;max-width:440px;width:100%}
+.cw>div{background:var(--card);border-radius:20px;padding:16px}
+.cw h2{margin:0;font-size:clamp(22px,6vw,32px)}
+#cn{font-size:clamp(40px,12vw,64px);font-weight:800;color:#ff3d8b;line-height:1.1}
+#st{font-size:clamp(36px,10vw,52px);letter-spacing:4px}
+.cw small{display:block;font-size:12px;opacity:.75;margin-top:8px}
+@media (max-height:520px){h1{font-size:26px}.cw>div{padding:8px}#cn{font-size:34px}#st{font-size:30px}.btn{padding:6px 16px;font-size:16px}.tc{width:min(170px,28vw)}}
+</style></head><body>
+<div id="box"><canvas id="c"></canvas></div>
+<div id="menu" class="ov"><div class="in"><h1>🌈 Rainbow Trucks 🚚</h1><div style="font-size:20px;font-weight:800">Tap your truck to start!</div><div class="cards" id="cards"></div></div></div>
+<div id="gt" class="hide"></div>
+<div id="cert" class="ov hide"><div class="in"><div class="cw"><div>
+<div style="font-size:38px" id="em">🎉🏆🎉</div><h2 id="ch">Certificate of Appreciation</h2><p style="margin:6px" id="pg">Proudly given to</p>
+<div id="cn"></div><p style="margin:6px" id="msg"></p><div id="st"></div><p style="margin:4px;font-weight:800" id="ct"></p>
+<small>Disclaimer: This certificate is for fun and entertainment only. It is not a real or official certificate.</small></div></div>
+<button class="btn" id="again">▶ Play Again</button><button class="btn b2" id="chg">🚚 Change Truck</button></div></div>
+<script>
+const C=document.getElementById('c'),x=C.getContext('2d'),box=document.getElementById('box');
+const FF="'Baloo 2','Comic Sans MS',sans-serif",RB=['#ff3b3b','#ff9f1c','#ffe93b','#3ddc5a','#35b6ff','#6b5bff','#c850ff'];
+const T=[{n:'Mani',code:'2378',t:'White Long Truck',b:'#ffffff',k:'#90a4ae',sh:'#35b6ff',bc:'#35b6ff'},
+{n:'Boo',code:'2738',t:'Yellow Long Truck',b:'#ffd21f',k:'#e08000',sh:'#ff9f1c',bc:'#ff9f1c'},
+{n:'Itti',code:'2783',t:'Pakistani Truck Art',b:'#e53935',k:'#fdd835',art:1,sh:'#3ddc5a',bc:'#3ddc5a'}];
+let w,h,dpr;
+function rs(){dpr=Math.min(devicePixelRatio||1,2);w=box.clientWidth;h=box.clientHeight;C.width=w*dpr;C.height=h*dpr;C.style.width=w+'px';C.style.height=h+'px';x.setTransform(dpr,0,0,dpr,0,0)}
+addEventListener('resize',rs);addEventListener('orientationchange',()=>setTimeout(rs,200));try{new ResizeObserver(rs).observe(box)}catch(e){}rs();addEventListener('contextmenu',e=>e.preventDefault());
+function circ(c,X,Y,r,col){c.fillStyle=col;c.beginPath();c.arc(X,Y,r,0,7);c.fill()}
+function fl(c,X,Y,r,col){for(let i=0;i<6;i++)circ(c,X+Math.cos(i*1.047)*r,Y+Math.sin(i*1.047)*r,r*.7,col);circ(c,X,Y,r*.6,'#ffeb3b')}
+function art(c,X,Y,W,H){c.fillStyle='#e53935';c.fillRect(X,Y,W,H);const n=Math.max(2,Math.round(W/H*1.5));
+for(let i=0;i<n;i++)fl(c,X+W*(i+.5)/n,Y+H*.42,Math.min(W/n,H)*.22,RB[(i*2)%7]);
+c.fillStyle='#fdd835';c.fillRect(X,Y+H*.78,W,H*.06);c.fillStyle='#2e7d32';c.fillRect(X,Y+H*.86,W,H*.14);
+c.strokeStyle='#fdd835';c.lineWidth=Math.max(2,H*.05);c.strokeRect(X,Y,W,H)}
+function side(c,tk){c.strokeStyle=tk.k;c.lineWidth=2;
+if(tk.art)art(c,8,20,135,52);else{c.fillStyle=tk.b;c.fillRect(8,20,135,52);c.fillStyle=tk.k;c.fillRect(8,62,135,10);c.strokeRect(8,20,135,52)}
+c.fillStyle=tk.art?'#1e88e5':tk.b;c.beginPath();c.roundRect(147,34,44,38,6);c.fill();c.stroke();
+c.fillStyle='#b3e5fc';c.fillRect(170,39,17,14);
+[30,55,110,170].forEach(X=>{circ(c,X,76,10,'#263238');circ(c,X,76,4,'#eceff1')})}
+function rear(c,X,Y,s,tk,tilt){c.save();c.translate(X,Y);c.rotate(tilt);const W=s,H=s*.9;c.strokeStyle=tk.k;c.lineWidth=2;
+c.fillStyle=tk.art?'#1e88e5':tk.b;c.beginPath();c.roundRect(-W*.36,-H*1.12,W*.72,H*.3,8);c.fill();c.stroke();
+if(tk.art)art(c,-W/2,-H,W,H*.85);else{c.fillStyle=tk.b;c.fillRect(-W/2,-H,W,H*.85);c.strokeRect(-W/2,-H,W,H*.85);c.beginPath();c.moveTo(0,-H);c.lineTo(0,-H*.15);c.stroke()}
+c.fillStyle='#ff1744';c.fillRect(-W*.47,-H*.3,W*.1,H*.1);c.fillRect(W*.37,-H*.3,W*.1,H*.1);
+c.fillStyle='#263238';c.fillRect(-W*.45,-H*.17,W*.16,H*.2);c.fillRect(W*.29,-H*.17,W*.16,H*.2);c.restore()}
+// menu cards
+const cards=document.getElementById('cards');
+T.forEach((tk,i)=>{const d=document.createElement('div');d.className='tc';d.style.borderColor=tk.bc;
+const cv=document.createElement('canvas');cv.width=200;cv.height=90;side(cv.getContext('2d'),tk);
+d.append(cv);d.insertAdjacentHTML('beforeend',`<b>${tk.n}</b><span>${tk.t}</span>`);d.onclick=()=>go(i);cards.append(d)});
+// game state
+const L=6300,SP=90;let seed=1,offT=0,ph1,ph2,A,B,f1,base,tk=T[0],mode='menu',pos=0,p=0,steer=0,tgt=0,tm=0,busy=0,clock=0;
+const hs=n=>{n=Math.sin(n*127.1+seed)*43758.5453;return n-Math.floor(n)};
+const raw=d=>Math.sin(d*f1+ph1)*A+Math.sin(d*.0095+ph2)*B,rc=d=>raw(d)-base;
+function newGame(){seed=Math.random()*1000;ph1=Math.random()*6.28;ph2=Math.random()*6.28;A=.8+Math.random()*.5;B=.25+Math.random()*.3;f1=.0035+Math.random()*.0015;base=0;base=raw(0);pos=0;p=0;steer=0;tgt=0;tm=0;offT=0}
+newGame();
+const say=t=>{try{const u=new SpeechSynthesisUtterance(t);u.pitch=1.4;u.rate=.95;speechSynthesis.cancel();speechSynthesis.speak(u)}catch(e){}};
+const sl=ms=>new Promise(r=>setTimeout(r,ms)),$=id=>document.getElementById(id),gt=$('gt');
+let AC,NB;function ac(){try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();if(AC.state=='suspended')AC.resume()}catch(e){}}
+function clap(){try{ac();if(!AC)return;if(!NB){const n=Math.floor(AC.sampleRate*.12);NB=AC.createBuffer(1,n,AC.sampleRate);const d=NB.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2)}
+const t0=AC.currentTime+.05;for(let k=0;k<30;k++){const at=t0+k*.1+Math.random()*.08,g=AC.createGain(),b=AC.createBiquadFilter(),sc=AC.createBufferSource();
+sc.buffer=NB;b.type='bandpass';b.frequency.value=1200+Math.random()*2200;b.Q.value=.9;const v=.55*Math.sin(Math.PI*(k+1)/31);
+g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(v,at+.004);g.gain.exponentialRampToValueAtTime(.001,at+.1);sc.connect(b);b.connect(g);g.connect(AC.destination);sc.start(at)}}catch(e){}}
+async function go(i){ac();if(busy)return;busy=1;tk=T[i];$('menu').classList.add('hide');$('cert').classList.add('hide');newGame();mode='wait';
+say(`Hello ${tk.n}! Let's drive!`);gt.classList.remove('hide');gt.innerHTML=`Hello ${tk.n}! 👋<br>Let's drive!`;await sl(1900);
+for(const m of['3','2','1','GO! 🚚']){gt.textContent=m;await sl(750)}gt.classList.add('hide');mode='play';busy=0}
+function fmt(s){s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function lose(){mode='lost';$('em').textContent='😢';$('ch').textContent='Oh no! Try Again!';$('pg').textContent='Sorry';
+$('cn').textContent=tk.n;$('st').textContent='☆☆☆';$('ct').textContent=`Stopped after ${fmt(tm)}`;
+$('msg').textContent='The truck left the road and bumped into the trees and flowers. Stay on the road next time!';
+$('cert').classList.remove('hide');say(`Oh no ${tk.n}! Let's try again!`)}
+function finish(){mode='done';$('em').textContent='🎉🏆🎉';$('ch').textContent='Certificate of Appreciation';$('pg').textContent='Proudly given to';
+const fin=pos>=L,s=!fin?1:tm<=80?3:tm<=100?2:1;
+$('cn').textContent=tk.n;$('st').textContent='⭐'.repeat(s)+'☆'.repeat(3-s);
+$('ct').textContent=fin?`Finished in ${fmt(tm)}`:'Drove for 2 whole minutes!';
+$('msg').textContent=s==3?'Super speedy driving! Amazing!':s==2?'Great driving! Well done!':'Lovely driving! Keep practicing!';
+$('cert').classList.remove('hide');if(fin)clap();setTimeout(()=>say(`Well done ${tk.n}!`),fin?1800:0)}
+$('again').onclick=()=>go(T.indexOf(tk));$('chg').onclick=()=>{$('cert').classList.add('hide');$('menu').classList.remove('hide');mode='menu'};
+// input
+let down=0;const setT=e=>{tgt=Math.max(-1,Math.min(1,(e.clientX-w/2)/(w*.3)))};
+C.addEventListener('pointerdown',e=>{down=1;setT(e);try{C.setPointerCapture(e.pointerId)}catch(_){}});C.addEventListener('pointermove',e=>{if(down)setT(e)});
+['pointerup','pointercancel','pointerleave'].forEach(n=>C.addEventListener(n,()=>{down=0;tgt=0}));
+addEventListener('keydown',e=>{if(e.key=='ArrowLeft')tgt=-1;if(e.key=='ArrowRight')tgt=1});
+addEventListener('keyup',e=>{if(e.key.startsWith('Arrow'))tgt=0});
+let off=0;
+function update(dt){clock+=dt;steer+=(tgt-steer)*Math.min(1,dt*9);
+if(mode=='menu'){pos+=40*dt;p=rc(pos+33.3);steer=Math.sin(clock)*.4;if(pos>L-400)newGame();return}
+if(mode!='play')return;tm+=dt;p+=steer*1.7*dt;const rt=rc(pos+33.3);off=Math.abs(p-rt)-1;
+if(off>0)offT+=dt;else offT=0;if(offT>1||off>.6){lose();return}pos+=SP*dt;if(pos>=L||tm>=120)finish()}
+function tree(X,Y,s,bl,n){x.fillStyle='#8d5a3b';x.fillRect(X-s*.07,Y-s*.6,s*.14,s*.6);
+circ(x,X,Y-s*.95,s*.45,'#3fbf4f');circ(x,X-s*.3,Y-s*.72,s*.33,'#34b046');circ(x,X+s*.3,Y-s*.72,s*.33,'#34b046');circ(x,X,Y-s*1.05,s*.3,'#56d364');
+if(bl)for(let i=0;i<6;i++)circ(x,X+Math.cos(i*1.3)*s*.33,Y-s*.9+Math.sin(i*2.1)*s*.25,s*.07,RB[(n+i)%7])}
+function scene(sh){const Hz=sh*.42;x.save();x.beginPath();x.rect(0,0,w,sh);x.clip();
+let g=x.createLinearGradient(0,0,0,Hz);g.addColorStop(0,'#2fb4ff');g.addColorStop(1,'#d6f3ff');x.fillStyle=g;x.fillRect(0,0,w,Hz+2);
+const R0=Math.min(w*.46,Hz*1.5),lw=R0*.07;x.lineWidth=lw;x.globalAlpha=.75;
+for(let i=0;i<7;i++){x.strokeStyle=RB[i];x.beginPath();x.arc(w/2,Hz+Hz*.2,R0-i*lw,Math.PI,0);x.stroke()}x.globalAlpha=1;
+
+circ(x,w*.85,Hz*.3,Hz*.14,'#fff27a');circ(x,w*.85,Hz*.3,Hz*.1,'#ffd21f');
+for(let i=0;i<3;i++){const cx=((w*i*.4+clock*12*(i+1))%(w+240))-120,cy=Hz*(.2+i*.22),r=Hz*.07;[0,1,2].forEach(k=>circ(x,cx+k*r*1.2,cy-(k==1?r*.5:0),r*(k==1?1.2:.9),'#fff'))}
+x.fillStyle='#9be58f';x.beginPath();x.moveTo(0,Hz);for(let i=0;i<=w;i+=10)x.lineTo(i,Hz-Hz*.12*(.6+.4*Math.sin(i*.012+1)));x.lineTo(w,Hz);x.fill();
+x.fillStyle='#b8f0a8';x.beginPath();x.moveTo(0,Hz);for(let i=0;i<=w;i+=10)x.lineTo(i,Hz-Hz*.07*(.6+.4*Math.sin(i*.02+4)));x.lineTo(w,Hz);x.fill();
+const H=sh-Hz;
+for(let y=Math.ceil(Hz);y<sh;y+=2){const t=(y-Hz)/H;if(t<.012)continue;const d=pos+30/t,rw=t*w*.3,cx=w/2+(rc(d)-p)*rw;
+x.fillStyle=(Math.floor(d/40)&1)?'#7be35f':'#69d24c';x.fillRect(0,y,w,2);
+x.fillStyle=RB[Math.floor(d/22)%7];x.fillRect(cx-rw*1.12,y,rw*2.24,2);
+if(d>=L&&d<L+40){for(let k=0;k<8;k++){x.fillStyle=((k+Math.floor(d/5))&1)?'#111':'#fff';x.fillRect(cx-rw+k*rw/4,y,rw/4+1,2)}}
+else{x.fillStyle=(Math.floor(d/40)&1)?'#7d8699':'#727b8f';x.fillRect(cx-rw,y,rw*2,2);if(Math.floor(d/18)&1){x.fillStyle='#fff6a8';x.fillRect(cx-rw*.03,y,rw*.06,2)}}}
+const k0=Math.ceil((pos+32)/14),k1=Math.floor((pos+600)/14);
+for(let k=k1;k>=k0;k--){const d=k*14,t=30/(d-pos),yy=Hz+t*H,u=t*w*.3;
+for(const s of[-1,1]){const n=k*2+(s>0?1:0),r1=hs(n),r2=hs(n+.5),cx=w/2+(rc(d)-p)*u;
+if(r1<.5)tree(cx+s*(1.7+r2*1.4)*u,yy,u*.6,r2>.45,n);
+else{const X=cx+s*(1.25+r2*2.2)*u;x.strokeStyle='#2e9c3c';x.lineWidth=Math.max(1,u*.02);x.beginPath();x.moveTo(X,yy);x.lineTo(X,yy-u*.12);x.stroke();fl(x,X,yy-u*.14,u*.08,RB[n%7])}}}
+const fd=L-pos;if(fd>33&&fd<600){const t=30/fd,u=t*w*.3,yy=Hz+t*H,cx=w/2+(rc(L)-p)*u;
+x.fillStyle='#fff';x.fillRect(cx-u*1.2,yy-u*.9,u*.12,u*.9);x.fillRect(cx+u*1.08,yy-u*.9,u*.12,u*.9);
+x.fillStyle='#ff3d8b';x.fillRect(cx-u*1.2,yy-u*1.05,u*2.4,u*.3);x.fillStyle='#fff';x.font=`800 ${u*.24}px ${FF}`;x.textAlign='center';x.fillText('🏁 FINISH 🏁',cx,yy-u*.82)}
+const s=Math.min(w*.2,H*.42),sk=off>0&&mode=='play'?Math.sin(clock*60)*2:0;
+rear(x,w/2+sk,Hz+.9*H,s,tk,steer*.08);
+if(offT>0&&mode=='play'){x.textAlign='center';x.font=`800 ${Math.max(20,Math.min(w,900)*.06)}px ${FF}`;x.fillStyle='#ff3b3b';x.strokeStyle='#fff';x.lineWidth=5;x.strokeText('⚠️ Turn back!',w/2,Hz+H*.3);x.fillText('⚠️ Turn back!',w/2,Hz+H*.3)}
+// HUD
+const fs=Math.max(14,Math.min(w,900)*.032),bx=w*.12,bw=w*.76;x.textAlign='left';x.font=`800 ${fs}px ${FF}`;
+x.fillStyle='#ffffffcc';x.beginPath();x.roundRect(bx,8,bw,fs*.9,fs);x.fill();
+const pr=Math.min(1,pos/L);g=x.createLinearGradient(bx,0,bx+bw,0);RB.forEach((c,i)=>g.addColorStop(i/6,c));x.fillStyle=g;x.beginPath();x.roundRect(bx,8,Math.max(fs,bw*pr),fs*.9,fs);x.fill();
+x.textBaseline='middle';x.fillText('🚚',bx+bw*pr-fs*.6,8+fs*.45);x.fillText('🏁',bx+bw-fs*.3,8+fs*.45);
+x.fillStyle='#3b2a66';x.fillText(tk.n,8,8+fs*.45);x.textAlign='right';x.fillText('⏱'+fmt(tm),w-8,8+fs*.45);x.textBaseline='alphabetic';
+x.restore()}
+function cock(y0){const ch=h-y0;let g=x.createLinearGradient(0,y0,0,h);g.addColorStop(0,'#ffd6f5');g.addColorStop(1,'#c7b8ff');x.fillStyle=g;x.fillRect(0,y0,w,ch);
+for(let i=0;i<7;i++){x.fillStyle=RB[i];x.fillRect(w/7*i,y0,w/7+1,8)}
+const cx=w/2,cy=y0+ch*.58,r=Math.min(w*.3,ch*.34),rot=steer*1.25;x.lineWidth=r*.2;x.lineCap='butt';
+for(let i=0;i<7;i++){x.strokeStyle=RB[i];x.beginPath();x.arc(cx,cy,r,rot+i*.8976,rot+(i+1)*.8976+.02);x.stroke()}
+x.strokeStyle='#5c4b99';x.lineWidth=r*.12;x.lineCap='round';[0,Math.PI,Math.PI/2].forEach(a=>{x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+Math.cos(a+rot)*r,cy+Math.sin(a+rot)*r);x.stroke()});
+circ(x,cx,cy,r*.26,'#ffd21f');x.save();x.translate(cx,cy);x.rotate(rot);x.font=`${r*.3}px serif`;x.textAlign='center';x.textBaseline='middle';x.fillText('⭐',0,0);x.restore();x.textBaseline='alphabetic';
+
+x.fillStyle='#3b2a66';x.textAlign='center';x.font=`800 ${Math.max(14,Math.min(w,800)*.04)}px ${FF}`;x.fillText('👈 Touch left or right to steer 👉',w/2,y0+Math.max(30,ch*.11));
+x.globalAlpha=.35+.25*Math.sin(clock*4);x.font=`${r*.45}px serif`;x.fillText('◀',w*.08,cy+r*.15);x.fillText('▶',w*.92,cy+r*.15);x.globalAlpha=1}
+let last=performance.now();
+function loop(n){const dt=Math.min(.05,(n-last)/1000);last=n;update(dt);const sh=Math.floor(h/2);scene(sh);cock(sh);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+</script></body></html>
